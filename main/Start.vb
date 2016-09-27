@@ -5,13 +5,17 @@ Public Class Start
     Dim objDal As dalData
     Dim intTimerDisplay, intCounterDisplay As Integer
     Dim intTimerLogging, intCounterLogging As Integer
+    Dim intPing As Integer
     Dim strDevIP As String
     Dim client As Net.Sockets.TcpClient
     Dim clientStream As Net.Sockets.NetworkStream
+    Dim blnFlagDisconnected As Boolean = False
+    Dim intOpenCloseLimit As Integer
 
     Const MAX_TRYING% = 5 'kali
     Const SLEEP_TIME% = 1 'detik
     Const TIME_OUT% = 5 'detik
+    Const PING_TIME% = 5 'detik
 
     Dim bytWrite As [Byte]()
     Dim bytReading As Byte()
@@ -31,9 +35,7 @@ Public Class Start
         '
         tmrMain.Enabled = False
         Dim dlgSetting As dlgDBSetting = New dlgDBSetting(theSetting)
-        'If Not theSetting.CheckConnection Then
-        '    MsgBox("Gagal")
-        'End If
+
         While Not theSetting.CheckConnection()
             theSetting.ShowErrorMessage()
             If dlgSetting.ShowDialog() = Windows.Forms.DialogResult.OK Then
@@ -90,12 +92,11 @@ Public Class Start
         GMyEnvirontment.AppSetting.Log.WriteLog("System", "0", "Application", "Start", DALCore.ADLog.enLogMode.LogOk, "")
         '        '
         'First
-        Me.ApplyStatus(enStatus.StatusDisconnect)
+        Me.DisplayStatus(enStatus.StatusDisconnect)
         'Load setting
         LoadSetting()
-        '
-        'Try Connect
-        ConnectNet()
+        'ping
+        PingNet()
 
         tmrMain.Enabled = True
     End Sub
@@ -111,20 +112,26 @@ Public Class Start
         intCounterDisplay = intTimerDisplay
         intTimerLogging = GMyEnvirontment.AppProfile.readProperty("loginginterval")
         strDevIP = GMyEnvirontment.AppProfile.readProperty("deviceip")
+        intOpenCloseLimit = GMyEnvirontment.AppProfile.readProperty("opencloselimit")
 
         'Timer logging dalam menit, maka di jadikan detik dulu
         intTimerLogging = intTimerLogging * 60
         intCounterLogging = intTimerLogging
+        '
+        progTimerDisplay.Maximum = intTimerDisplay
+        progTimerLog.Maximum = intCounterLogging
     End Sub
 
     Enum enStatus
         StatusDisconnect = 0
         StatusConnecting = 1
         StatusConnected = 2
+        StatusAvailable = 3
+        StatusUnAvailable = 4
         StatusError = 255
     End Enum
 
-    Private Sub ApplyStatus(ByVal status As enStatus)
+    Private Sub DisplayStatus(ByVal status As enStatus)
         Select Case status
             Case enStatus.StatusConnected
                 lblStatus.Text = "Connected"
@@ -135,9 +142,15 @@ Public Class Start
             Case enStatus.StatusDisconnect
                 lblStatus.Text = "Not Connected"
                 lblStatus.BackColor = Color.Gainsboro
+            Case enStatus.StatusAvailable
+                lblStatus.Text = "Available"
+                lblStatus.BackColor = Color.Green
+            Case enStatus.StatusAvailable
+                lblStatus.Text = "Unavailable"
+                lblStatus.BackColor = Color.Pink
             Case enStatus.StatusError
                 lblStatus.Text = "Error!"
-                lblStatus.BackColor = Color.Pink
+                lblStatus.BackColor = Color.Red
         End Select
 
     End Sub
@@ -175,7 +188,8 @@ Public Class Start
 
     Private Sub DisplayData()
         If Not client.Connected Then
-            lblInfo.Text = "Not connected to device"
+            lblTemp.Text = "0.0"
+            lblHum.Text = "0.0"
             Return
         End If
         Try
@@ -191,9 +205,11 @@ Public Class Start
             ParseData(sData)
         Catch ex As Exception
             lblInfo.Text = "Error: " & ex.Message
-        End Try
+            GMyEnvirontment.AppSetting.Log.WriteLog("System", "0", "Application", "DisplayData", DALCore.ADLog.enLogMode.LogError, ex.Message)
+            lblTemp.Text = "0.0"
+            lblHum.Text = "0.0"
 
-        'End If
+        End Try
     End Sub
 
     Private Sub ParseData(ByVal RawData As String)
@@ -231,31 +247,40 @@ Public Class Start
 #End Region
 
     Private Sub ConnectNet()
-        If client Is Nothing Then
+        If client Is Nothing Or blnFlagDisconnected Then
             client = New Net.Sockets.TcpClient()
-        End If        
-       
+            blnFlagDisconnected = False
+        End If
         'Try connect
         Dim counter As Integer = MAX_TRYING
         Try
             While Not client.Connected And counter > 0
+                client.ReceiveTimeout = 30
                 client.Connect(strDevIP, 80)
-                'Tunggu 5 detik
+                'Tunggu n detik
                 System.Threading.Thread.Sleep(SLEEP_TIME * 1000)
                 counter -= 1
-                ApplyStatus(enStatus.StatusConnecting)
+                DisplayStatus(enStatus.StatusConnecting)
                 lblInfo.Text = "Connecting...[" & MAX_TRYING + 1 - counter & "]"
             End While
+        Catch ex2 As Net.Sockets.SocketException
+            If ex2.ErrorCode = 10056 Then 'Error karena socket already open
+                DisconnectNet()
+            End If
+            lblInfo.Text = "Error: " & ex2.Message
+            GMyEnvirontment.AppSetting.Log.WriteLog("System", "0", "Application", "ConnectNet", DALCore.ADLog.enLogMode.LogError, ex2.Message)
         Catch ex As Exception
             lblInfo.Text = "Error: " & ex.Message
+            GMyEnvirontment.AppSetting.Log.WriteLog("System", "0", "Application", "ConnectNet", DALCore.ADLog.enLogMode.LogError, ex.Message)
+
         End Try
 
         If client.Connected Then
             clientStream = client.GetStream()
-            ApplyStatus(enStatus.StatusConnected)
+            DisplayStatus(enStatus.StatusConnected)
             lblInfo.Text = ""
         Else
-            ApplyStatus(enStatus.StatusDisconnect)
+            DisplayStatus(enStatus.StatusDisconnect)
         End If
 
 
@@ -263,9 +288,33 @@ Public Class Start
 
     Private Sub DisconnectNet()
         If client IsNot Nothing Then
-            client.Close()
-            If clientStream IsNot Nothing Then
-                clientStream.Close()
+            Try
+                client.Client.Shutdown(Net.Sockets.SocketShutdown.Both)
+                client.Client.Disconnect(True)
+                client.Close()
+                If clientStream IsNot Nothing Then
+                    clientStream.Close()
+                End If
+            Catch ex As Exception
+                GMyEnvirontment.AppSetting.Log.WriteLog("System", "0", "Application", "DisconnectNet", DALCore.ADLog.enLogMode.LogError, ex.Message)
+            End Try
+            blnFlagDisconnected = True
+        End If
+        DisplayStatus(enStatus.StatusDisconnect)
+    End Sub
+
+    Private Sub PingNet()
+        If My.Computer.Network.IsAvailable Then
+            If My.Computer.Network.Ping(strDevIP) Then                
+                DisplayStatus(enStatus.StatusAvailable)
+            Else
+                DisplayStatus(enStatus.StatusUnAvailable)
+                If client IsNot Nothing Then
+                    If client.Connected Then
+                        DisconnectNet()
+                    End If
+                End If
+
             End If
         End If
     End Sub
@@ -289,11 +338,15 @@ Public Class Start
         InitializeComponent()
 
         ' Add any initialization after the InitializeComponent() call.
-      
+        Me.Text += " Ver. " + My.Application.Info.Version.ToString()
+
     End Sub
 
 
     Private Sub tmrMain_Tick(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles tmrMain.Tick
+        progTimerDisplay.Value = intTimerDisplay - intCounterDisplay
+        progTimerLog.Value = intTimerLogging - intCounterLogging
+        '
         ShowDateTime()
         'Timer display (dalam detik)
         If intCounterDisplay = 0 Then
@@ -301,6 +354,10 @@ Public Class Start
             'Do refresh display
             ConnectNet()
             DisplayData()
+            'Jika timer lebih dari 30 detik maka lakukan prosedur connect dan disconnect
+            If intTimerDisplay >= intOpenCloseLimit Then
+                DisconnectNet()
+            End If
         End If
         'Timer logging (dalam detik)
         If intCounterLogging = 0 Then
@@ -308,13 +365,22 @@ Public Class Start
             'Do save logging
             LogData()
         End If
+        If intPing = 0 And intTimerDisplay >= intOpenCloseLimit Then
+            PingNet()
+            intPing = PING_TIME
+        End If
         'Kurangi 1 setiap detik
         intCounterDisplay -= 1
         intCounterLogging -= 1
+        If intTimerDisplay >= intOpenCloseLimit Then
+            intPing -= 1
+        End If
+        '
+        
     End Sub
 
 
-    Private Sub mnExit_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles mnExit.Click
+    Private Sub mnExit_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles mnAppExit.Click
         Me.Close()
     End Sub
 
@@ -338,7 +404,17 @@ Public Class Start
         End If
     End Sub
 
-    Private Sub MinimizeToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MinimizeToolStripMenuItem.Click
+    Private Sub MinimizeToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
         Me.WindowState = FormWindowState.Minimized
+    End Sub
+
+    Private Sub mnAppConnect_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles mnAppConnect.Click
+        GMyEnvirontment.AppSetting.Log.WriteLog("System", "0", "Application", "Menu:Connect", DALCore.ADLog.enLogMode.LogOk, "")
+        Me.ConnectNet()
+    End Sub
+
+    Private Sub mnAppDisconnect_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles mnAppDisconnect.Click
+        GMyEnvirontment.AppSetting.Log.WriteLog("System", "0", "Application", "Menu:Disconnect", DALCore.ADLog.enLogMode.LogOk, "")
+        Me.DisconnectNet()
     End Sub
 End Class

@@ -31,6 +31,9 @@ Partial Class dlgProfile
         Me.Label3 = New System.Windows.Forms.Label
         Me.Label5 = New System.Windows.Forms.Label
         Me.txtIPAddress = New System.Windows.Forms.TextBox
+        Me.Label6 = New System.Windows.Forms.Label
+        Me.numMinOpenClose = New System.Windows.Forms.NumericUpDown
+        Me.Label7 = New System.Windows.Forms.Label
         Me.pnlBody.SuspendLayout()
         Me.pnlBottom.SuspendLayout()
         Me.pageIdentitas.SuspendLayout()
@@ -40,6 +43,7 @@ Partial Class dlgProfile
         Me.tabAbout.SuspendLayout()
         CType(Me.numDisplayRT, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.numLogingInterval, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.numMinOpenClose, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'pnlTop
@@ -78,6 +82,9 @@ Partial Class dlgProfile
         'pageAplikasi
         '
         Me.pageAplikasi.BackColor = System.Drawing.Color.AliceBlue
+        Me.pageAplikasi.Controls.Add(Me.Label6)
+        Me.pageAplikasi.Controls.Add(Me.numMinOpenClose)
+        Me.pageAplikasi.Controls.Add(Me.Label7)
         Me.pageAplikasi.Controls.Add(Me.txtIPAddress)
         Me.pageAplikasi.Controls.Add(Me.Label5)
         Me.pageAplikasi.Controls.Add(Me.Label2)
@@ -100,6 +107,9 @@ Partial Class dlgProfile
         Me.pageAplikasi.Controls.SetChildIndex(Me.Label2, 0)
         Me.pageAplikasi.Controls.SetChildIndex(Me.Label5, 0)
         Me.pageAplikasi.Controls.SetChildIndex(Me.txtIPAddress, 0)
+        Me.pageAplikasi.Controls.SetChildIndex(Me.Label7, 0)
+        Me.pageAplikasi.Controls.SetChildIndex(Me.numMinOpenClose, 0)
+        Me.pageAplikasi.Controls.SetChildIndex(Me.Label6, 0)
         '
         'l10
         '
@@ -204,6 +214,33 @@ Partial Class dlgProfile
         Me.txtIPAddress.TabIndex = 4
         Me.txtIPAddress.Text = "10.12.2.100"
         '
+        'Label6
+        '
+        Me.Label6.AutoSize = True
+        Me.Label6.Location = New System.Drawing.Point(294, 191)
+        Me.Label6.Name = "Label6"
+        Me.Label6.Size = New System.Drawing.Size(30, 13)
+        Me.Label6.TabIndex = 13
+        Me.Label6.Text = "detik"
+        '
+        'numMinOpenClose
+        '
+        Me.numMinOpenClose.Location = New System.Drawing.Point(242, 189)
+        Me.numMinOpenClose.Maximum = New Decimal(New Integer() {3600, 0, 0, 0})
+        Me.numMinOpenClose.Name = "numMinOpenClose"
+        Me.numMinOpenClose.Size = New System.Drawing.Size(46, 21)
+        Me.numMinOpenClose.TabIndex = 12
+        Me.numMinOpenClose.Value = New Decimal(New Integer() {10, 0, 0, 0})
+        '
+        'Label7
+        '
+        Me.Label7.AutoSize = True
+        Me.Label7.Location = New System.Drawing.Point(28, 191)
+        Me.Label7.Name = "Label7"
+        Me.Label7.Size = New System.Drawing.Size(208, 13)
+        Me.Label7.TabIndex = 11
+        Me.Label7.Text = "Open/Close mode jika refresh rate diatas:"
+        '
         'dlgProfile
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -223,6 +260,7 @@ Partial Class dlgProfile
         Me.tabAbout.PerformLayout()
         CType(Me.numDisplayRT, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.numLogingInterval, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.numMinOpenClose, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
@@ -237,5 +275,8 @@ Partial Class dlgProfile
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents txtIPAddress As System.Windows.Forms.TextBox
     Friend WithEvents Label5 As System.Windows.Forms.Label
+    Friend WithEvents Label6 As System.Windows.Forms.Label
+    Friend WithEvents numMinOpenClose As System.Windows.Forms.NumericUpDown
+    Friend WithEvents Label7 As System.Windows.Forms.Label
 
 End Class

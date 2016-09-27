@@ -22,7 +22,11 @@ Partial Class Start
         Me.components = New System.ComponentModel.Container
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Start))
         Me.mnMain = New System.Windows.Forms.MenuStrip
-        Me.mnExit = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnApplikasi = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnAppConnect = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnAppDisconnect = New System.Windows.Forms.ToolStripMenuItem
+        Me.ToolStripMenuItem1 = New System.Windows.Forms.ToolStripSeparator
+        Me.mnAppExit = New System.Windows.Forms.ToolStripMenuItem
         Me.mnSetting = New System.Windows.Forms.ToolStripMenuItem
         Me.mnSettingApp = New System.Windows.Forms.ToolStripMenuItem
         Me.mnSettingDB = New System.Windows.Forms.ToolStripMenuItem
@@ -41,7 +45,8 @@ Partial Class Start
         Me.Label3 = New System.Windows.Forms.Label
         Me.lblInfo = New System.Windows.Forms.Label
         Me.tmrMain = New System.Windows.Forms.Timer(Me.components)
-        Me.MinimizeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.progTimerDisplay = New System.Windows.Forms.ProgressBar
+        Me.progTimerLog = New System.Windows.Forms.ProgressBar
         Me.mnMain.SuspendLayout()
         Me.pnlTop.SuspendLayout()
         Me.pnlMain.SuspendLayout()
@@ -52,18 +57,42 @@ Partial Class Start
         '
         'mnMain
         '
-        Me.mnMain.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnExit, Me.mnSetting, Me.MinimizeToolStripMenuItem})
+        Me.mnMain.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnApplikasi, Me.mnSetting})
         Me.mnMain.Location = New System.Drawing.Point(0, 0)
         Me.mnMain.Name = "mnMain"
         Me.mnMain.Size = New System.Drawing.Size(641, 24)
         Me.mnMain.TabIndex = 0
         Me.mnMain.Text = "MenuStrip1"
         '
-        'mnExit
+        'mnApplikasi
         '
-        Me.mnExit.Name = "mnExit"
-        Me.mnExit.Size = New System.Drawing.Size(37, 20)
-        Me.mnExit.Text = "Exit"
+        Me.mnApplikasi.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnAppConnect, Me.mnAppDisconnect, Me.ToolStripMenuItem1, Me.mnAppExit})
+        Me.mnApplikasi.Name = "mnApplikasi"
+        Me.mnApplikasi.Size = New System.Drawing.Size(60, 20)
+        Me.mnApplikasi.Text = "Aplikasi"
+        '
+        'mnAppConnect
+        '
+        Me.mnAppConnect.Name = "mnAppConnect"
+        Me.mnAppConnect.Size = New System.Drawing.Size(152, 22)
+        Me.mnAppConnect.Text = "Connect"
+        '
+        'mnAppDisconnect
+        '
+        Me.mnAppDisconnect.Name = "mnAppDisconnect"
+        Me.mnAppDisconnect.Size = New System.Drawing.Size(152, 22)
+        Me.mnAppDisconnect.Text = "Disconnect"
+        '
+        'ToolStripMenuItem1
+        '
+        Me.ToolStripMenuItem1.Name = "ToolStripMenuItem1"
+        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(149, 6)
+        '
+        'mnAppExit
+        '
+        Me.mnAppExit.Name = "mnAppExit"
+        Me.mnAppExit.Size = New System.Drawing.Size(152, 22)
+        Me.mnAppExit.Text = "Exit"
         '
         'mnSetting
         '
@@ -75,13 +104,13 @@ Partial Class Start
         'mnSettingApp
         '
         Me.mnSettingApp.Name = "mnSettingApp"
-        Me.mnSettingApp.Size = New System.Drawing.Size(152, 22)
+        Me.mnSettingApp.Size = New System.Drawing.Size(122, 22)
         Me.mnSettingApp.Text = "Aplikasi"
         '
         'mnSettingDB
         '
         Me.mnSettingDB.Name = "mnSettingDB"
-        Me.mnSettingDB.Size = New System.Drawing.Size(152, 22)
+        Me.mnSettingDB.Size = New System.Drawing.Size(122, 22)
         Me.mnSettingDB.Text = "Database"
         '
         'lblTime
@@ -130,6 +159,8 @@ Partial Class Start
         '
         'pnlMain
         '
+        Me.pnlMain.Controls.Add(Me.progTimerLog)
+        Me.pnlMain.Controls.Add(Me.progTimerDisplay)
         Me.pnlMain.Controls.Add(Me.pnlHum)
         Me.pnlMain.Controls.Add(Me.pnlTemp)
         Me.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill
@@ -244,11 +275,25 @@ Partial Class Start
         Me.tmrMain.Enabled = True
         Me.tmrMain.Interval = 1000
         '
-        'MinimizeToolStripMenuItem
+        'progTimerDisplay
         '
-        Me.MinimizeToolStripMenuItem.Name = "MinimizeToolStripMenuItem"
-        Me.MinimizeToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
-        Me.MinimizeToolStripMenuItem.Text = "Minimize"
+        Me.progTimerDisplay.Dock = System.Windows.Forms.DockStyle.Bottom
+        Me.progTimerDisplay.ForeColor = System.Drawing.Color.Lime
+        Me.progTimerDisplay.Location = New System.Drawing.Point(0, 219)
+        Me.progTimerDisplay.Name = "progTimerDisplay"
+        Me.progTimerDisplay.Size = New System.Drawing.Size(641, 10)
+        Me.progTimerDisplay.Style = System.Windows.Forms.ProgressBarStyle.Continuous
+        Me.progTimerDisplay.TabIndex = 7
+        '
+        'progTimerLog
+        '
+        Me.progTimerLog.Dock = System.Windows.Forms.DockStyle.Bottom
+        Me.progTimerLog.ForeColor = System.Drawing.Color.IndianRed
+        Me.progTimerLog.Location = New System.Drawing.Point(0, 209)
+        Me.progTimerLog.Name = "progTimerLog"
+        Me.progTimerLog.Size = New System.Drawing.Size(641, 10)
+        Me.progTimerLog.Style = System.Windows.Forms.ProgressBarStyle.Continuous
+        Me.progTimerLog.TabIndex = 8
         '
         'Start
         '
@@ -265,7 +310,6 @@ Partial Class Start
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.MainMenuStrip = Me.mnMain
         Me.MaximizeBox = False
-        Me.MinimizeBox = False
         Me.Name = "Start"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Temp & Hum Logging"
@@ -299,8 +343,13 @@ Partial Class Start
     Friend WithEvents tmrMain As System.Windows.Forms.Timer
     Friend WithEvents lblDate As System.Windows.Forms.Label
     Friend WithEvents Label3 As System.Windows.Forms.Label
-    Friend WithEvents mnExit As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents mnSettingApp As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents mnSettingDB As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents MinimizeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents mnApplikasi As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents mnAppConnect As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents mnAppDisconnect As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripSeparator
+    Friend WithEvents mnAppExit As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents progTimerDisplay As System.Windows.Forms.ProgressBar
+    Friend WithEvents progTimerLog As System.Windows.Forms.ProgressBar
 End Class
